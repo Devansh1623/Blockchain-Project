@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ChainSleuth — AI-Powered Blockchain Fraud Detection</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #0f0f0f;
+      --surface:      #171717;
+      --surface-2:    #222222;
+      --surface-3:    #2a2a2a;
+      --border:       #262626;
+      --border-2:     #333333;
+      --border-focus: #404040;
+      --accent:       #3b82f6;
+      --accent-hover: #2563eb;
+      --accent-muted: rgba(59,130,246,0.10);
+      --accent-glow:  rgba(59,130,246,0.18);
+      --text:         #fafafa;
+      --text-2:       #a1a1aa;
+      --text-3:       #52525b;
+      --text-4:       #3f3f46;
+      --red:          #ef4444;
+      --orange:       #f97316;
+      --yellow:       #eab308;
+      --green:        #22c55e;
+    }
+
+    html { font-size: 16px; -webkit-font-smoothing: antialiased; scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, sans-serif;
+      line-height: 1.6;
+    }
+
+    /* ─── Scrollbar ─── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 999px; }
+    ::selection { background: var(--accent-muted); color: var(--text); }
+
+    /* ─── Utility ─── */
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .accent { color: var(--accent); }
+    .container { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+    .tag {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 3px 10px; border-radius: 999px;
+      background: var(--accent-muted); border: 1px solid rgba(59,130,246,0.25);
+      color: var(--accent); font-size: 0.72rem; font-weight: 500; letter-spacing: 0.04em;
+    }
+
+    /* ─── NAV ─── */
+    nav {
+      position: sticky; top: 0; z-index: 50;
+      border-bottom: 1px solid var(--border);
+      background: rgba(15,15,15,0.85); backdrop-filter: blur(12px);
+    }
+    .nav-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      height: 56px;
+    }
+    .logo {
+      display: flex; align-items: center; gap: 10px; text-decoration: none;
+    }
+    .logo-icon {
+      width: 30px; height: 30px; border-radius: 6px;
+      background: var(--accent-muted); border: 1px solid rgba(59,130,246,0.25);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .logo-icon svg { color: var(--accent); }
+    .logo-text { font-size: 0.9rem; font-weight: 600; color: var(--text); }
+    .logo-sub  { font-size: 0.65rem; color: var(--text-3); margin-top: -2px; }
+    .nav-links { display: flex; align-items: center; gap: 4px; }
+    .nav-links a {
+      font-size: 0.82rem; color: var(--text-2); text-decoration: none;
+      padding: 6px 12px; border-radius: 6px; transition: color 0.15s, background 0.15s;
+    }
+    .nav-links a:hover { color: var(--text); background: var(--surface-2); }
+    .btn-sm {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 7px 16px; border-radius: 6px;
+      background: var(--accent); color: #fff;
+      font-size: 0.82rem; font-weight: 500; text-decoration: none;
+      border: none; cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-sm:hover { background: var(--accent-hover); }
+    .btn-outline {
+      background: transparent; color: var(--text-2);
+      border: 1px solid var(--border-2);
+    }
+    .btn-outline:hover { background: var(--surface-2); color: var(--text); }
+
+    /* ─── HERO ─── */
+    .hero {
+      padding: 88px 0 72px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; top: -120px; left: 50%; transform: translateX(-50%);
+      width: 700px; height: 700px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(59,130,246,0.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-badge { margin-bottom: 24px; }
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.25rem);
+      font-weight: 700; letter-spacing: -0.03em;
+      line-height: 1.15;
+      max-width: 700px; margin: 0 auto 20px;
+    }
+    .hero h1 span {
+      background: linear-gradient(135deg, var(--accent) 0%, #818cf8 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+      font-size: 1rem; color: var(--text-2); max-width: 540px;
+      margin: 0 auto 36px; line-height: 1.7;
+    }
+    .hero-cta { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
+    .hero-cta .btn-sm { padding: 10px 22px; font-size: 0.88rem; }
+
+    /* stats row */
+    .hero-stats {
+      display: flex; align-items: center; justify-content: center;
+      gap: 32px; margin-top: 52px; flex-wrap: wrap;
+    }
+    .stat-item { text-align: center; }
+    .stat-value { font-size: 1.5rem; font-weight: 700; color: var(--text); }
+    .stat-label { font-size: 0.72rem; color: var(--text-3); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.06em; }
+    .stat-divider { width: 1px; height: 32px; background: var(--border-2); }
+
+    /* ─── ARCH DIAGRAM ─── */
+    .section { padding: 72px 0; }
+    .section-label {
+      font-size: 0.72rem; font-weight: 500; color: var(--accent);
+      text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px;
+    }
+    .section-title {
+      font-size: clamp(1.4rem, 3vw, 1.9rem);
+      font-weight: 700; letter-spacing: -0.025em; margin-bottom: 12px;
+    }
+    .section-desc { font-size: 0.92rem; color: var(--text-2); max-width: 520px; line-height: 1.7; }
+
+    .arch-grid {
+      display: flex; gap: 1px; margin-top: 40px;
+      border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
+    }
+    .arch-layer {
+      flex: 1; background: var(--surface); padding: 28px 24px;
+      border-right: 1px solid var(--border);
+      transition: background 0.2s;
+    }
+    .arch-layer:last-child { border-right: none; }
+    .arch-layer:hover { background: var(--surface-2); }
+    .arch-layer-icon {
+      width: 36px; height: 36px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 14px;
+    }
+    .arch-layer-name { font-size: 0.82rem; font-weight: 600; margin-bottom: 6px; }
+    .arch-layer-tech { font-size: 0.72rem; color: var(--text-3); line-height: 1.6; }
+    .arch-layer-tech span {
+      display: inline-block; background: var(--surface-3);
+      border: 1px solid var(--border-2); border-radius: 4px;
+      padding: 1px 7px; margin: 2px 2px 0 0; font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem; color: var(--text-2);
+    }
+
+    /* ─── HOW IT WORKS ─── */
+    .steps { display: flex; flex-direction: column; gap: 1px; margin-top: 40px; }
+    .step {
+      display: grid; grid-template-columns: 56px 1fr;
+      gap: 24px; padding: 28px 32px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; margin-bottom: 8px;
+      transition: border-color 0.2s, background 0.2s;
+      align-items: start;
+    }
+    .step:hover { border-color: var(--border-focus); background: var(--surface-2); }
+    .step-num {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: var(--accent-muted); border: 1px solid rgba(59,130,246,0.2);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.78rem;
+      font-weight: 500; color: var(--accent); flex-shrink: 0; margin-top: 2px;
+    }
+    .step-title { font-size: 0.95rem; font-weight: 600; margin-bottom: 6px; }
+    .step-desc { font-size: 0.85rem; color: var(--text-2); line-height: 1.65; }
+    .step-code {
+      margin-top: 12px; background: var(--surface-3); border: 1px solid var(--border-2);
+      border-radius: 6px; padding: 12px 16px;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
+      color: var(--text-2); line-height: 1.7; overflow-x: auto;
+    }
+    .step-code .k { color: #818cf8; }
+    .step-code .s { color: #22c55e; }
+    .step-code .c { color: var(--text-3); }
+    .step-code .n { color: #f97316; }
+
+    /* ─── TECH DEEP DIVE ─── */
+    .tech-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px; margin-top: 40px;
+    }
+    .tech-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 24px;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .tech-card:hover { border-color: var(--border-focus); background: var(--surface-2); }
+    .tech-card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+    .tech-card-icon {
+      width: 32px; height: 32px; border-radius: 7px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .tech-card-name { font-size: 0.88rem; font-weight: 600; }
+    .tech-card-desc { font-size: 0.82rem; color: var(--text-2); line-height: 1.65; }
+    .tech-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+    .pill {
+      background: var(--surface-3); border: 1px solid var(--border-2);
+      border-radius: 4px; padding: 2px 8px;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; color: var(--text-2);
+    }
+
+    /* ─── RISK BADGE PREVIEW ─── */
+    .risk-row {
+      display: flex; flex-wrap: wrap; gap: 12px; margin-top: 20px; align-items: center;
+    }
+    .rbadge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px; border-radius: 5px;
+      font-size: 0.75rem; font-weight: 500;
+    }
+    .rbadge-dot { width: 6px; height: 6px; border-radius: 50%; }
+
+    /* ─── PIPELINE FLOW ─── */
+    .pipeline {
+      display: flex; align-items: center; gap: 0;
+      margin-top: 40px; overflow-x: auto; padding-bottom: 8px;
+    }
+    .pipeline-node {
+      flex-shrink: 0; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 18px 22px; text-align: center; min-width: 130px;
+    }
+    .pipeline-node-icon {
+      font-size: 1.4rem; margin-bottom: 8px;
+    }
+    .pipeline-node-name { font-size: 0.78rem; font-weight: 600; }
+    .pipeline-node-sub  { font-size: 0.68rem; color: var(--text-3); margin-top: 3px; }
+    .pipeline-arrow {
+      flex-shrink: 0; padding: 0 8px; color: var(--text-3); font-size: 1.1rem;
+    }
+
+    /* ─── SMART CONTRACT SNIPPET ─── */
+    .code-block {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; overflow: hidden; margin-top: 32px;
+    }
+    .code-block-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 20px; border-bottom: 1px solid var(--border);
+      background: var(--surface-2);
+    }
+    .code-block-title { font-size: 0.8rem; font-weight: 500; color: var(--text-2); }
+    .code-block-lang {
+      font-size: 0.68rem; font-family: 'JetBrains Mono', monospace;
+      color: var(--accent); background: var(--accent-muted);
+      border: 1px solid rgba(59,130,246,0.2); border-radius: 4px; padding: 2px 8px;
+    }
+    .code-block-body {
+      padding: 20px 24px; font-family: 'JetBrains Mono', monospace;
+      font-size: 0.76rem; line-height: 1.8; color: var(--text-2);
+      overflow-x: auto;
+    }
+    .code-block-body .k  { color: #818cf8; }
+    .code-block-body .t  { color: #38bdf8; }
+    .code-block-body .s  { color: #22c55e; }
+    .code-block-body .c  { color: var(--text-4); font-style: italic; }
+    .code-block-body .n  { color: #f97316; }
+    .code-block-body .v  { color: #e879f9; }
+    .code-block-body .num{ color: #fb923c; }
+
+    /* ─── DIVIDER ─── */
+    .divider { border: none; border-top: 1px solid var(--border); margin: 0; }
+
+    /* ─── FOOTER ─── */
+    footer {
+      padding: 36px 0 32px;
+      border-top: 1px solid var(--border);
+    }
+    .footer-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 16px;
+    }
+    .footer-left { font-size: 0.8rem; color: var(--text-3); }
+    .footer-left strong { color: var(--text-2); }
+    .footer-right { display: flex; align-items: center; gap: 8px; }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+    .footer-status { font-size: 0.75rem; color: var(--text-3); }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 640px) {
+      .arch-grid { flex-direction: column; }
+      .arch-layer { border-right: none; border-bottom: 1px solid var(--border); }
+      .arch-layer:last-child { border-bottom: none; }
+      .nav-links { display: none; }
+      .stat-divider { display: none; }
+      .step { grid-template-columns: 1fr; }
+      .step-num { display: none; }
+      .pipeline { gap: 0; }
+    }
+
+    /* ─── Fade-in animation ─── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up { animation: fadeUp 0.5s ease both; }
+    .fade-up-1 { animation-delay: 0.05s; }
+    .fade-up-2 { animation-delay: 0.12s; }
+    .fade-up-3 { animation-delay: 0.20s; }
+    .fade-up-4 { animation-delay: 0.28s; }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════ NAV ═══════════════════════════════ -->
+<nav>
+  <div class="container nav-inner">
+    <a class="logo" href="#">
+      <div class="logo-icon">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/>
+        </svg>
+      </div>
+      <div>
+        <div class="logo-text">ChainSleuth</div>
+        <div class="logo-sub">Fraud Detection</div>
+      </div>
+    </a>
+    <div class="nav-links">
+      <a href="#how-it-works">How it works</a>
+      <a href="#tech">Tech Stack</a>
+      <a href="#contract">Smart Contract</a>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <a href="https://github.com" class="btn-sm btn-outline" target="_blank">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+        </svg>
+        GitHub
+      </a>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════ HERO ═══════════════════════════════ -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-badge fade-up">
+      <span class="tag">
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><circle cx="5" cy="5" r="5"/></svg>
+        B.Tech CSE-AI · Research Prototype
+      </span>
+    </div>
+    <h1 class="fade-up fade-up-1">
+      AI-Powered <span>Blockchain Fraud</span> Detection
+    </h1>
+    <p class="fade-up fade-up-2">
+      ChainSleuth ingests raw blockchain transfer data, scores every transaction with an
+      <strong>Isolation Forest</strong> anomaly model, explains the risk deterministically,
+      and commits verified fraud findings to an immutable <strong>Solidity smart contract</strong>
+      on the Ethereum Sepolia testnet.
+    </p>
+    <div class="hero-cta fade-up fade-up-3">
+      <a href="#how-it-works" class="btn-sm">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z"/>
+        </svg>
+        See How It Works
+      </a>
+      <a href="#tech" class="btn-sm btn-outline">Tech Stack</a>
+    </div>
+
+    <div class="hero-stats fade-up fade-up-4">
+      <div class="stat-item">
+        <div class="stat-value accent">5</div>
+        <div class="stat-label">Core Layers</div>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <div class="stat-value accent">ML</div>
+        <div class="stat-label">Isolation Forest</div>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <div class="stat-value accent">On-Chain</div>
+        <div class="stat-label">Audit Proof</div>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <div class="stat-value accent">Async</div>
+        <div class="stat-label">FastAPI Backend</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- ═══════════════════════════════ ARCHITECTURE ═══════════════════════════════ -->
+<section class="section" id="architecture">
+  <div class="container">
+    <div class="section-label">Architecture</div>
+    <div class="section-title">Four Tiers, One Pipeline</div>
+    <p class="section-desc">
+      Each layer is independently deployable. The frontend communicates only with the REST API;
+      ML and blockchain services are internal to the backend.
+    </p>
+
+    <div class="arch-grid">
+      <!-- Frontend -->
+      <div class="arch-layer">
+        <div class="arch-layer-icon" style="background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.2);">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#818cf8" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0H3"/>
+          </svg>
+        </div>
+        <div class="arch-layer-name">Frontend</div>
+        <div class="arch-layer-tech">
+          <span>React 18</span><span>TypeScript</span><span>Vite</span>
+          <span>Tailwind CSS</span><span>Recharts</span><span>Lucide</span>
+        </div>
+        <p style="font-size:0.78rem;color:var(--text-3);margin-top:12px;line-height:1.6;">
+          SPA dashboard with live transaction table, risk heat-map, alert feed, and audit log viewer.
+        </p>
+      </div>
+
+      <!-- Backend -->
+      <div class="arch-layer">
+        <div class="arch-layer-icon" style="background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2);">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#3b82f6" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 14.25h13.5m-13.5 0a3 3 0 01-3-3m3 3a3 3 0 003 3h10.5a3 3 0 003-3m-13.5 0V11.25m13.5 3V11.25m0 0a3 3 0 00-3-3H8.25a3 3 0 00-3 3m13.5 0H5.25"/>
+          </svg>
+        </div>
+        <div class="arch-layer-name">API Server</div>
+        <div class="arch-layer-tech">
+          <span>FastAPI</span><span>Pydantic v2</span><span>SQLAlchemy 2</span>
+          <span>aiosqlite</span><span>Uvicorn</span>
+        </div>
+        <p style="font-size:0.78rem;color:var(--text-3);margin-top:12px;line-height:1.6;">
+          Fully async REST API. Handles CSV ingestion, transaction CRUD, ML scoring
+          triggers, and on-chain write requests.
+        </p>
+      </div>
+
+      <!-- ML -->
+      <div class="arch-layer">
+        <div class="arch-layer-icon" style="background:rgba(234,179,8,0.1);border:1px solid rgba(234,179,8,0.2);">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#eab308" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>
+          </svg>
+        </div>
+        <div class="arch-layer-name">ML Pipeline</div>
+        <div class="arch-layer-tech">
+          <span>scikit-learn</span><span>Pandas</span><span>NumPy</span>
+          <span>Joblib</span><span>Isolation Forest</span>
+        </div>
+        <p style="font-size:0.78rem;color:var(--text-3);margin-top:12px;line-height:1.6;">
+          Unsupervised anomaly detection. Engineers 8 statistical features per transaction,
+          outputs an anomaly score, and maps it to a 4-tier risk label.
+        </p>
+      </div>
+
+      <!-- Blockchain -->
+      <div class="arch-layer">
+        <div class="arch-layer-icon" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#ef4444" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244"/>
+          </svg>
+        </div>
+        <div class="arch-layer-name">Smart Contract</div>
+        <div class="arch-layer-tech">
+          <span>Solidity 0.8.20</span><span>OpenZeppelin 5</span>
+          <span>Hardhat</span><span>Ethers.js</span><span>Sepolia</span>
+        </div>
+        <p style="font-size:0.78rem;color:var(--text-3);margin-top:12px;line-height:1.6;">
+          <span class="mono" style="font-size:0.72rem;">ChainSleuthAudit.sol</span> stores
+          fraud hashes immutably. Role-based access via OpenZeppelin AccessControl.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- ═══════════════════════════════ HOW IT WORKS ═══════════════════════════════ -->
+<section class="section" id="how-it-works">
+  <div class="container">
+    <div class="section-label">Walkthrough</div>
+    <div class="section-title">How It Works — Step by Step</div>
+    <p class="section-desc">
+      From a raw CSV of blockchain transactions to an on-chain audit proof in five stages.
+    </p>
+
+    <!-- Pipeline flow visual -->
+    <div class="pipeline">
+      <div class="pipeline-node">
+        <div class="pipeline-node-icon">📂</div>
+        <div class="pipeline-node-name">CSV Upload</div>
+        <div class="pipeline-node-sub">Raw transactions</div>
+      </div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-node">
+        <div class="pipeline-node-icon">🔧</div>
+        <div class="pipeline-node-name">Feature Eng.</div>
+        <div class="pipeline-node-sub">Pandas ETL</div>
+      </div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-node">
+        <div class="pipeline-node-icon">🤖</div>
+        <div class="pipeline-node-name">ML Scoring</div>
+        <div class="pipeline-node-sub">Isolation Forest</div>
+      </div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-node">
+        <div class="pipeline-node-icon">🛡️</div>
+        <div class="pipeline-node-name">Risk Label</div>
+        <div class="pipeline-node-sub">4-tier badge</div>
+      </div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-node">
+        <div class="pipeline-node-icon">⛓️</div>
+        <div class="pipeline-node-name">On-Chain Proof</div>
+        <div class="pipeline-node-sub">Sepolia testnet</div>
+      </div>
+    </div>
+
+    <div class="steps" style="margin-top:32px;">
+
+      <!-- Step 1 -->
+      <div class="step">
+        <div class="step-num">01</div>
+        <div>
+          <div class="step-title">CSV Ingestion & Validation</div>
+          <div class="step-desc">
+            The user uploads a <span class="mono" style="font-size:0.78rem;">blockchain_transactions.csv</span>
+            file through the dashboard. The backend's <strong>ingestion service</strong> validates
+            required columns (<code style="font-family:monospace;font-size:0.78rem;">tx_hash</code>,
+            <code style="font-family:monospace;font-size:0.78rem;">amount</code>,
+            <code style="font-family:monospace;font-size:0.78rem;">sender</code>, …),
+            deduplicates rows by <code style="font-family:monospace;font-size:0.78rem;">tx_hash</code>,
+            and persists records to the async SQLite database via SQLAlchemy 2.0.
+          </div>
+          <div class="step-code">
+<span class="c"># backend/app/services/ingestion.py</span>
+REQUIRED_COLUMNS = {<span class="s">"tx_hash"</span>, <span class="s">"amount"</span>, <span class="s">"sender"</span>, <span class="s">"receiver"</span>, <span class="s">"timestamp"</span>}
+
+<span class="k">async def</span> <span class="n">ingest_csv</span>(file_path, db: AsyncSession) -> IngestResult:
+    df = pd.read_csv(file_path)
+    _validate_columns(df)          <span class="c"># raises IngestionError if missing</span>
+    df = df.drop_duplicates(<span class="s">"tx_hash"</span>)
+    <span class="k">await</span> _bulk_insert(df, db)      <span class="c"># async batch write</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="step">
+        <div class="step-num">02</div>
+        <div>
+          <div class="step-title">Feature Engineering</div>
+          <div class="step-desc">
+            Each transaction is transformed into a <strong>8-dimensional feature vector</strong>
+            by the Pandas ETL layer. Features include: log-normalized amount, sender/receiver
+            frequency, hour-of-day, value vs. address mean deviation, and inter-transaction
+            time delta. This is what the ML model actually sees — not raw strings.
+          </div>
+          <div class="step-code">
+<span class="c"># Derived features fed into Isolation Forest</span>
+features = [
+  <span class="s">"log_amount"</span>,          <span class="c"># log1p(amount) — skew correction</span>
+  <span class="s">"sender_freq"</span>,          <span class="c"># how often sender appears</span>
+  <span class="s">"receiver_freq"</span>,
+  <span class="s">"hour_of_day"</span>,
+  <span class="s">"amount_z_score"</span>,       <span class="c"># std deviations from mean</span>
+  <span class="s">"tx_velocity"</span>,          <span class="c"># txns per sender per hour</span>
+  <span class="s">"amount_to_addr_ratio"</span>,
+  <span class="s">"time_delta_seconds"</span>,
+]
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="step">
+        <div class="step-num">03</div>
+        <div>
+          <div class="step-title">Isolation Forest Anomaly Scoring</div>
+          <div class="step-desc">
+            An <strong>Isolation Forest</strong> (scikit-learn) is trained on unlabeled
+            transaction data. It builds random trees and measures how quickly each point is
+            "isolated" from the rest — anomalies require fewer splits. The model outputs an
+            <strong>anomaly score</strong> in <span class="mono" style="font-size:0.78rem;">[-1, 0]</span>,
+            which is then mapped to a human-readable risk tier:
+          </div>
+          <div class="risk-row">
+            <div class="rbadge" style="background:rgba(239,68,68,0.08);color:#ef4444;">
+              <div class="rbadge-dot" style="background:#ef4444;"></div> Critical
+            </div>
+            <div class="rbadge" style="background:rgba(249,115,22,0.08);color:#f97316;">
+              <div class="rbadge-dot" style="background:#f97316;"></div> High
+            </div>
+            <div class="rbadge" style="background:rgba(234,179,8,0.08);color:#eab308;">
+              <div class="rbadge-dot" style="background:#eab308;"></div> Medium
+            </div>
+            <div class="rbadge" style="background:rgba(34,197,94,0.08);color:#22c55e;">
+              <div class="rbadge-dot" style="background:#22c55e;"></div> Low
+            </div>
+          </div>
+          <div class="step-code">
+<span class="c"># backend/app/ml/model.py</span>
+<span class="k">def</span> <span class="n">if_score_to_risk</span>(score: <span class="t">float</span>) -> <span class="t">str</span>:
+    <span class="k">if</span> score &lt; -<span class="num">0.15</span>:  <span class="k">return</span> <span class="s">"critical"</span>
+    <span class="k">if</span> score &lt; -<span class="num">0.08</span>:  <span class="k">return</span> <span class="s">"high"</span>
+    <span class="k">if</span> score &lt; -<span class="num">0.02</span>:  <span class="k">return</span> <span class="s">"medium"</span>
+    <span class="k">return</span> <span class="s">"low"</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4 -->
+      <div class="step">
+        <div class="step-num">04</div>
+        <div>
+          <div class="step-title">Dashboard & Explainability</div>
+          <div class="step-desc">
+            Risk scores and feature contributions are surfaced in the React dashboard.
+            The <strong>Alerts</strong> page shows all <em>critical</em> and <em>high</em>
+            transactions. The <strong>Transaction Detail</strong> view explains which feature
+            drove the score — e.g. "amount_z_score is 4.2σ above average" — giving
+            deterministic, human-readable explainability without a separate XAI library.
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 5 -->
+      <div class="step">
+        <div class="step-num">05</div>
+        <div>
+          <div class="step-title">On-Chain Audit Commit</div>
+          <div class="step-desc">
+            Analysts can flag a transaction for permanent record. The backend calls
+            <span class="mono" style="font-size:0.78rem;">Web3AuditService</span>, which
+            computes a <strong>keccak256 hash</strong> of the transaction data, then
+            calls <span class="mono" style="font-size:0.78rem;">ChainSleuthAudit.sol</span>
+            on Sepolia. The event is immutable — no one can delete or alter the fraud finding.
+          </div>
+          <div class="step-code">
+<span class="c">// contracts/ChainSleuthAudit.sol (simplified)</span>
+<span class="k">event</span> <span class="n">FraudCommitted</span>(
+    <span class="t">bytes32 indexed</span> txHash,
+    <span class="t">address indexed</span> reporter,
+    <span class="t">string</span>          riskLevel,
+    <span class="t">uint256</span>         timestamp
+);
+
+<span class="k">function</span> <span class="n">commitFraud</span>(<span class="t">bytes32</span> txHash, <span class="t">string</span> riskLevel)
+    <span class="k">external onlyRole</span>(REPORTER_ROLE) {
+    emit FraudCommitted(txHash, msg.sender, riskLevel, block.timestamp);
+}
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- ═══════════════════════════════ TECH STACK ═══════════════════════════════ -->
+<section class="section" id="tech">
+  <div class="container">
+    <div class="section-label">Tech Stack</div>
+    <div class="section-title">What Powers ChainSleuth</div>
+    <p class="section-desc">
+      Every technology was chosen to demonstrate a distinct concept relevant to
+      modern AI + distributed systems engineering.
+    </p>
+
+    <div class="tech-grid">
+
+      <div class="tech-card">
+        <div class="tech-card-header">
+          <div class="tech-card-icon" style="background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.2);">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#818cf8" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0H3"/>
+            </svg>
+          </div>
+          <div class="tech-card-name">React 18 + TypeScript</div>
+        </div>
+        <div class="tech-card-desc">
+          Component-based SPA with strict TypeScript types for all API responses.
+          React Router v6 handles client-side routing. Recharts renders risk
+          distribution charts.
+        </div>
+        <div class="tech-pills">
+          <span class="pill">useState</span><span class="pill">useEffect</span>
+          <span class="pill">react-router-dom</span><span class="pill">axios</span>
+        </div>
+      </div>
+
+      <div class="tech-card">
+        <div class="tech-card-header">
+          <div class="tech-card-icon" style="background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2);">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#3b82f6" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/>
+            </svg>
+          </div>
+          <div class="tech-card-name">FastAPI + Async SQLAlchemy</div>
+        </div>
+        <div class="tech-card-desc">
+          High-performance Python API with automatic OpenAPI docs at
+          <span class="mono" style="font-size:0.75rem;">/docs</span>.
+          SQLAlchemy 2.0 async sessions prevent blocking the event loop during DB writes.
+        </div>
+        <div class="tech-pills">
+          <span class="pill">Pydantic v2</span><span class="pill">aiosqlite</span>
+          <span class="pill">Uvicorn</span><span class="pill">CORS</span>
+        </div>
+      </div>
+
+      <div class="tech-card">
+        <div class="tech-card-header">
+          <div class="tech-card-icon" style="background:rgba(234,179,8,0.1);border:1px solid rgba(234,179,8,0.2);">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#eab308" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>
+            </svg>
+          </div>
+          <div class="tech-card-name">Isolation Forest (scikit-learn)</div>
+        </div>
+        <div class="tech-card-desc">
+          Unsupervised anomaly detection — no labelled fraud data needed.
+          The model is trained offline and saved with Joblib, then loaded
+          at API startup for sub-millisecond inference.
+        </div>
+        <div class="tech-pills">
+          <span class="pill">IsolationForest</span><span class="pill">Pandas</span>
+          <span class="pill">NumPy</span><span class="pill">Joblib</span>
+        </div>
+      </div>
+
+      <div class="tech-card">
+        <div class="tech-card-header">
+          <div class="tech-card-icon" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#ef4444" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244"/>
+            </svg>
+          </div>
+          <div class="tech-card-name">Solidity + Hardhat</div>
+        </div>
+        <div class="tech-card-desc">
+          The <span class="mono" style="font-size:0.75rem;">ChainSleuthAudit</span> contract uses
+          OpenZeppelin's AccessControl for role-based write permissions.
+          Deployed on Sepolia via Hardhat Ignition. Tested with Mocha/Chai.
+        </div>
+        <div class="tech-pills">
+          <span class="pill">Solidity 0.8.20</span><span class="pill">OZ AccessControl</span>
+          <span class="pill">Hardhat</span><span class="pill">Ethers.js</span>
+        </div>
+      </div>
+
+      <div class="tech-card">
+        <div class="tech-card-header">
+          <div class="tech-card-icon" style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.2);">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#22c55e" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125"/>
+            </svg>
+          </div>
+          <div class="tech-card-name">SQLite + aiosqlite</div>
+        </div>
+        <div class="tech-card-desc">
+          File-based SQLite is perfect for a prototype — zero infrastructure.
+          <span class="mono" style="font-size:0.75rem;">aiosqlite</span> wraps it with
+          a fully async interface so FastAPI never blocks on disk I/O.
+        </div>
+        <div class="tech-pills">
+          <span class="pill">SQLite</span><span class="pill">aiosqlite</span>
+          <span class="pill">SQLAlchemy 2.0</span><span class="pill">Alembic</span>
+        </div>
+      </div>
+
+      <div class="tech-card">
+        <div class="tech-card-header">
+          <div class="tech-card-icon" style="background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.2);">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#f97316" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.43.992a6.759 6.759 0 010 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.992l-1.004-.827a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+          </div>
+          <div class="tech-card-name">Vite + Tailwind CSS</div>
+        </div>
+        <div class="tech-card-desc">
+          Vite provides instant HMR during development and sub-20s production builds.
+          Tailwind's utility classes enable the dark minimalist design system without
+          writing a single custom CSS file.
+        </div>
+        <div class="tech-pills">
+          <span class="pill">Vite 6</span><span class="pill">Tailwind v3</span>
+          <span class="pill">PostCSS</span><span class="pill">JetBrains Mono</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- ═══════════════════════════════ SMART CONTRACT ═══════════════════════════════ -->
+<section class="section" id="contract">
+  <div class="container">
+    <div class="section-label">Smart Contract</div>
+    <div class="section-title">Immutable Audit Trail on Ethereum</div>
+    <p class="section-desc">
+      The Solidity contract is the final truth layer. Once a fraud hash is committed,
+      it cannot be deleted, tampered with, or disputed — it lives on Sepolia's blockchain forever.
+    </p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:32px;">
+      <div class="tech-card">
+        <div style="font-size:0.78rem;font-weight:600;margin-bottom:8px;">Key Design Choices</div>
+        <ul style="font-size:0.82rem;color:var(--text-2);line-height:2;padding-left:16px;">
+          <li><strong style="color:var(--text);">OpenZeppelin AccessControl</strong> — only accounts granted <span class="mono" style="font-size:0.72rem;">REPORTER_ROLE</span> can write</li>
+          <li><strong style="color:var(--text);">keccak256 hashing</strong> — tx data is hashed before committing to minimise gas</li>
+          <li><strong style="color:var(--text);">Event-driven storage</strong> — fraud records are emitted as events, not stored in mappings, for cost efficiency</li>
+          <li><strong style="color:var(--text);">No upgradeability</strong> — intentionally immutable to guarantee audit integrity</li>
+        </ul>
+      </div>
+      <div class="tech-card">
+        <div style="font-size:0.78rem;font-weight:600;margin-bottom:8px;">Deployment Info</div>
+        <div style="font-size:0.82rem;color:var(--text-2);line-height:2;">
+          <div>Network: <strong style="color:var(--text);">Ethereum Sepolia Testnet</strong></div>
+          <div>Compiler: <strong style="color:var(--text);">Solidity 0.8.20</strong></div>
+          <div>Framework: <strong style="color:var(--text);">Hardhat + Ignition</strong></div>
+          <div>Tests: <strong style="color:var(--text);">Mocha + Chai + Ethers.js</strong></div>
+          <div>OZ Version: <strong style="color:var(--text);">OpenZeppelin v5</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-block-header">
+        <div class="code-block-title">contracts/ChainSleuthAudit.sol</div>
+        <div class="code-block-lang">Solidity</div>
+      </div>
+      <div class="code-block-body">
+<span class="c">// SPDX-License-Identifier: MIT</span>
+<span class="k">pragma solidity</span> ^<span class="num">0.8.20</span>;
+
+<span class="k">import</span> <span class="s">"@openzeppelin/contracts/access/AccessControl.sol"</span>;
+
+<span class="k">contract</span> <span class="t">ChainSleuthAudit</span> <span class="k">is</span> AccessControl {
+    <span class="t">bytes32 public constant</span> REPORTER_ROLE = keccak256(<span class="s">"REPORTER_ROLE"</span>);
+
+    <span class="k">event</span> <span class="n">FraudCommitted</span>(
+        <span class="t">bytes32 indexed</span> txHash,
+        <span class="t">address indexed</span> reporter,
+        <span class="t">string</span>           riskLevel,
+        <span class="t">uint256</span>          timestamp
+    );
+
+    <span class="k">constructor</span>(<span class="t">address</span> admin) {
+        _grantRole(DEFAULT_ADMIN_ROLE, admin);
+        _grantRole(REPORTER_ROLE, admin);
+    }
+
+    <span class="k">function</span> <span class="n">commitFraud</span>(
+        <span class="t">bytes32</span> txHash,
+        <span class="t">string calldata</span> riskLevel
+    ) <span class="k">external onlyRole</span>(REPORTER_ROLE) {
+        <span class="k">emit</span> FraudCommitted(txHash, msg.sender, riskLevel, block.timestamp);
+    }
+}
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- ═══════════════════════════════ FOOTER ═══════════════════════════════ -->
+<footer>
+  <div class="container footer-inner">
+    <div class="footer-left">
+      <strong>ChainSleuth</strong> · B.Tech CSE-AI Research Prototype ·
+      Built with FastAPI, React, scikit-learn &amp; Solidity
+    </div>
+    <div class="footer-right">
+      <div class="status-dot"></div>
+      <span class="footer-status">Research prototype · Not for production</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
+

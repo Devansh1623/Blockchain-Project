@@ -1,0 +1,14 @@
+{
+  "name": "chainsleuth",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI-Powered Blockchain Fraud Detection Platform",
+  "scripts": {
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && python -m uvicorn app.main:app --reload --port 8000",
+    "train:ml": "cd backend && python -m app.ml.train",
+    "test:backend": "cd backend && pytest",
+    "test:contracts": "cd contracts && npm run test",
+    "build:frontend": "cd frontend && npm run build"
+  }
+}

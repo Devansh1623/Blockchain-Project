@@ -1,0 +1,17 @@
+{
+  "version": "1.0.0-e011aa3ed136",
+  "trained_at": "2026-10-28T05:00:32.279365+00:00",
+  "features": [
+    "amount",
+    "log_amount",
+    "amount_z_score",
+    "tx_frequency",
+    "unique_counterparties",
+    "amount_rank_percentile"
+  ],
+  "n_estimators": 200,
+  "contamination": 0.08,
+  "dataset_size": 50,
+  "model_hash_prefix": "e011aa3ed136",
+  "disclaimer": "Unsupervised anomaly detection trained on synthetic data. Scores are not calibrated fraud probabilities."
+}

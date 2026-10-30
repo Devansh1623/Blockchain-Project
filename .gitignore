@@ -1,0 +1,42 @@
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+dist/
+build/
+.next/
+
+# Environment
+.env
+.env.local
+!.env.example
+
+# Build
+frontend/dist/
+frontend/.vite/
+
+# Hardhat
+contracts/cache/
+contracts/artifacts/
+contracts/typechain-types/
+
+# Database
+*.db
+*.db-wal
+*.db-shm
+
+# ML raw data (model.pkl IS committed)
+backend/data/raw/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Coverage
+coverage/
+.pytest_cache/
+htmlcov/
